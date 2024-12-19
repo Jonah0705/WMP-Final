@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
+import { Link, Tabs, useRouter } from 'expo-router';
 import { Pressable } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Firebase auth import
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
@@ -17,20 +17,31 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+  const auth = getAuth();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.replace('/login'); 
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth, router]);
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
+        headerShown: false,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Student Info',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable>
@@ -47,11 +58,18 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="two"
+       <Tabs.Screen
+        name="select_subject"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Select Subject',
+          tabBarIcon: ({ color }) => <TabBarIcon name="edit" color={color} />,
+        }}
+      />
+       <Tabs.Screen
+        name="summary"
+        options={{
+          title: 'Enrollment Summary',
+          tabBarIcon: ({ color }) => <TabBarIcon name="eye" color={color} />,
         }}
       />
     </Tabs>
